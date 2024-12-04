@@ -1,0 +1,163 @@
+.navbar-brand {
+    font-weight: bold;
+}
+
+.srodek {
+    text-align:center;
+}
+
+.navbar-nav .nav-link {
+    color: #333;
+}
+.navbar-nav .nav-link:hover,
+.navbar-nav .nav-link:active {
+    color: #555;
+    background-color: transparent;
+}
+
+.nav-link.show, .nav-item .dropdown-item:active {
+   
+    background-color: unset !important;
+}
+
+.nav-item .dropdown-item:active {
+   
+    color: unset !important;
+}
+
+/* .dropdown-item:active, .dropdown-item:focus {
+    background-color: unset ; 
+  } */
+
+.logo-img {
+    max-height: 50px;
+    max-width: 80px;
+}
+
+nav.custom-navbar {
+    background-color: #87b08e; 
+}
+
+
+.image-container {
+    margin-bottom: 20px;
+}
+
+
+
+
+select {
+    border: 1px #f0f5f0;
+    border-radius: 4px;
+    background-color: #94b894;
+}
+
+input[type=button], input[type=submit], input[type=reset] {
+    background-color: #669966;
+    border: none;
+    color: white;
+    padding: 6px 30px;
+    margin: 4px 2px;
+    cursor: pointer;
+}
+
+#navbut
+{
+    height: 100%;
+    display: flex; 
+    flex-direction: column;
+}
+
+#navbut > *
+{
+    width: 107px;
+    height: 80px;
+    background-color: #669966;
+    border: 2px solid white;
+    color: white;
+}
+
+.containerview
+{
+    margin-top: 30px;
+    justify-content: space-between;
+}
+
+#blok{
+    max-width: 85%;
+}
+
+@media only screen and (max-width: 1200px) {
+.containerview
+{
+    flex-direction: column;
+    align-items: center;
+}
+
+#navbut
+{ 
+    width: min-content;
+    max-width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    margin: 15px 0;
+}
+
+}
+
+
+.btn-sample { 
+    color: #FFFFFF; 
+    background-color: #669966; 
+    border-color: #000000; 
+  } 
+   
+  .btn-sample:hover, 
+  .btn-sample:focus, 
+  .btn-sample:active, 
+  .btn-sample.active, 
+  .open .dropdown-toggle.btn-sample { 
+    color: #FFFFFF; 
+    background-color: #247A34; 
+    border-color: #000000; 
+  } 
+   
+  .btn-sample:active, 
+  .btn-sample.active, 
+  .open .dropdown-toggle.btn-sample { 
+    background-image: none; 
+  } 
+   
+  .btn-sample.disabled, 
+  .btn-sample[disabled], 
+  fieldset[disabled] .btn-sample, 
+  .btn-sample.disabled:hover, 
+  .btn-sample[disabled]:hover, 
+  fieldset[disabled] .btn-sample:hover, 
+  .btn-sample.disabled:focus, 
+  .btn-sample[disabled]:focus, 
+  fieldset[disabled] .btn-sample:focus, 
+  .btn-sample.disabled:active, 
+  .btn-sample[disabled]:active, 
+  fieldset[disabled] .btn-sample:active, 
+  .btn-sample.disabled.active, 
+  .btn-sample[disabled].active, 
+  fieldset[disabled] .btn-sample.active { 
+    background-color: #669966; 
+    border-color: #000000; 
+  } 
+   
+  .btn-sample .badge { 
+    color: #669966; 
+    background-color: #FFFFFF; 
+  }
+
+  .form-control:focus {
+    border-color: #669966; 
+    box-shadow: 0 0 5px rgba(28, 166, 33, 0.5); 
+  }
+
+  .btn-custom {
+    background-color: #5f8d5f; /* Green color */
+    color: #fff; /* Text color */
+}
