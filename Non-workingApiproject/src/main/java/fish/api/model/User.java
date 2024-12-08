@@ -1,4 +1,4 @@
-package org.example.model;
+package fish.api.model;
 
 import javax.persistence.Entity;
 import javax.persistence.Table;

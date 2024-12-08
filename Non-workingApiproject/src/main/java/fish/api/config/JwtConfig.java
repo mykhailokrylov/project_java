@@ -1,4 +1,4 @@
-package org.example.config;
+package fish.api.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

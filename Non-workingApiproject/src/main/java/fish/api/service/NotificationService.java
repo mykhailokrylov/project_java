@@ -1,7 +1,7 @@
-package org.example.service;
+package fish.api.service;
 
 import org.springframework.stereotype.Service;
-import org.example.model.User;
+import fish.api.model.User;
 
 @Service
 public class NotificationService {
