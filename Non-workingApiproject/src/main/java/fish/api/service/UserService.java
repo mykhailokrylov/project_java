@@ -2,6 +2,7 @@ package fish.api.service;
 
 import fish.api.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import fish.api.repository.UserRepository;
 
@@ -15,6 +16,9 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
+
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
@@ -25,6 +29,7 @@ public class UserService {
 
     public User createUser(User user) {
         validateUser(user);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
 
@@ -32,7 +37,7 @@ public class UserService {
         User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
         validateUser(userDetails);
         user.setUsername(userDetails.getUsername());
-        user.setPassword(userDetails.getPassword());
+        user.setPassword(passwordEncoder.encode(userDetails.getPassword()));
         user.setEmail(userDetails.getEmail());
         return userRepository.save(user);
     }

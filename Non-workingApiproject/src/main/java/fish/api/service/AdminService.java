@@ -7,6 +7,7 @@ import fish.api.repository.UserRepository;
 import fish.api.repository.FishRepository;
 import fish.api.repository.AdminRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -23,6 +24,9 @@ public class AdminService {
 
     @Autowired
     private AdminRepository adminRepository;
+
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
 
     public void suspendUser(Long userId, LocalDateTime until) {
         Optional<User> user = userRepository.findById(userId);
@@ -57,6 +61,7 @@ public class AdminService {
 
     public Admin createAdmin(Admin admin) {
         validateAdmin(admin);
+        admin.setPassword(passwordEncoder.encode(admin.getPassword()));
         return adminRepository.save(admin);
     }
 

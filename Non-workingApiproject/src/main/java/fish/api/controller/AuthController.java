@@ -7,9 +7,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.example.service.AuthService;
-import org.example.dto.RegisterRequest;
-import org.example.dto.LoginRequest;
+import fish.api.service.AuthService;
+import fish.api.dto.RegisterRequest;
+import fish.api.dto.LoginRequest;
 
 @RestController
 @RequestMapping("/api/auth")
