@@ -67,6 +67,9 @@ public class AdminService {
         if (admin.getPassword() == null || admin.getPassword().isEmpty()) {
             throw new IllegalArgumentException("Password cannot be null or empty");
         }
+        if (admin.getPassword().length() < 8) {
+            throw new IllegalArgumentException("Password must be at least 8 characters long");
+        }
         if (admin.getEmail() == null || admin.getEmail().isEmpty()) {
             throw new IllegalArgumentException("Email cannot be null or empty");
         }
