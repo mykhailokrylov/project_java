@@ -1,0 +1,28 @@
+services:
+  db:
+    build: ./Database/
+    container_name: database
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    env_file:
+      - .env
+    volumes:
+      - ./01_init.sql:/docker-entrypoint-initdb.d/01_init.sql
+    networks:
+      - api_network
+
+  server:
+    build: ./Non-workingApiproject/
+    container_name: server
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    depends_on:
+      - db
+    networks:
+      - api_network
+
+networks:
+  api_network:
+    driver: bridge
