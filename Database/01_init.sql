@@ -1,17 +1,12 @@
--- Postgre SQL
-
---user table
---User's caught fishes
---admin table
-
 CREATE SCHEMA api_schema;
 
 CREATE TABLE api_schema.user (
     id SERIAL PRIMARY KEY,
-    username VARCHAR(50) NOT NULL,
+    username VARCHAR(50) NOT NULL UNIQUE,
     password VARCHAR(50) NOT NULL,
-    email VARCHAR(50) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    email VARCHAR(50) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    suspended_until TIMESTAMP
 );
 
 CREATE TABLE api_schema.fish (
@@ -20,14 +15,15 @@ CREATE TABLE api_schema.fish (
     weight DECIMAL(10,2) NOT NULL,
     length DECIMAL(10,2) NOT NULL,
     location VARCHAR(80) NOT NULL,
-    user_id INT REFERENCES api_schema.user(id)
+    user_id INT REFERENCES api_schema.user(id),
+    likes INT DEFAULT 0
 );
 
 CREATE TABLE api_schema.admin (
     id SERIAL PRIMARY KEY,
-    username VARCHAR(50) NOT NULL,
+    username VARCHAR(50) NOT NULL UNIQUE,
     password VARCHAR(50) NOT NULL,
-    email VARCHAR(50) NOT NULL,
+    email VARCHAR(50) NOT NULL UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -46,3 +42,13 @@ GRANT USAGE ON SCHEMA api_schema TO api_user;
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA api_schema TO api_user;
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA api_schema TO api_user;
 GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA api_schema TO api_user;
+
+-- Ensure at least one admin exists
+DO
+$$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM api_schema.admin) THEN
+        INSERT INTO api_schema.admin (username, password, email) VALUES ('admin', 'admin', 's97813@pollub.edu.pl');
+    END IF;
+END
+$$;

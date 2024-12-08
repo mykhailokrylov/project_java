@@ -3,13 +3,12 @@ package fish.api.model;
 import javax.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "users")
+@Table(name = "admin")
 @Data
 @NoArgsConstructor
-public class User {
+public class Admin {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -21,14 +20,4 @@ public class User {
 
     @Column(unique = true)
     private String email;
-
-    private LocalDateTime suspendedUntil;
-
-    public boolean isSuspended() {
-        return suspendedUntil != null && suspendedUntil.isAfter(LocalDateTime.now());
-    }
-
-    public void setSuspendedUntil(LocalDateTime suspendedUntil) {
-        this.suspendedUntil = suspendedUntil;
-    }
 }
