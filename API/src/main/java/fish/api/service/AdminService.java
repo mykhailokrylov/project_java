@@ -13,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.util.Optional;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class AdminService {
@@ -83,5 +84,29 @@ public class AdminService {
         if (admin.getEmail() == null || admin.getEmail().isEmpty()) {
             throw new IllegalArgumentException("Email cannot be null or empty");
         }
+    }
+
+    public Optional<Admin> getAdminByUsername(String username) {
+        return adminRepository.findByUsername(username);
+    }
+
+    public Optional<Admin> getAdminById(Long id) {
+        return adminRepository.findById(id);
+    }
+
+    public List<Admin> getAllAdmins() {
+        return adminRepository.findAll();
+    }
+
+    public Optional<Admin> updateAdmin(String username, Admin adminDetails) {
+        return adminRepository.findByUsername(username).map(admin -> {
+            if (adminDetails.getEmail() != null) {
+                admin.setEmail(adminDetails.getEmail());
+            }
+            if (adminDetails.getPassword() != null) {
+                admin.setPassword(passwordEncoder.encode(adminDetails.getPassword()));
+            }
+            return adminRepository.save(admin);
+        });
     }
 }

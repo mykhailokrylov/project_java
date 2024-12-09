@@ -24,4 +24,8 @@ public class JwtService {
     public boolean validateToken(String token) {
         return jwtTokenUtil.validateToken(token);
     }
+
+    public String getRoleFromToken(String token) {
+        return jwtTokenUtil.getRoleFromToken(token);
+    }
 }

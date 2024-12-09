@@ -1,11 +1,15 @@
 package fish.api.service;
 
 import fish.api.model.User;
+import fish.api.util.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import fish.api.repository.UserRepository;
 
+import javax.servlet.http.HttpServletRequest;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import java.util.List;
 import java.util.Optional;
 import java.time.LocalDateTime;
@@ -18,6 +22,9 @@ public class UserService {
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
@@ -75,5 +82,17 @@ public class UserService {
         if (user.getEmail() == null || user.getEmail().isEmpty()) {
             throw new IllegalArgumentException("Email cannot be null or empty");
         }
+    }
+
+    private ResponseEntity<?> validateToken(HttpServletRequest request) {
+        final String authorizationHeader = request.getHeader("Authorization");
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("{\"error\": \"JWT Token is missing\"}");
+        }
+        String jwt = authorizationHeader.substring(7);
+        if (!jwtTokenUtil.validateToken(jwt)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("{\"error\": \"JWT Token is invalid\"}");
+        }
+        return null;
     }
 }
