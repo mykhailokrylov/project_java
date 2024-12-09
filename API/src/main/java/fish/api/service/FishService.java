@@ -28,67 +28,6 @@ public class FishService {
     @Autowired
     private NotificationService emailNotificationService;
 
-    public Fish createFish(Fish fish) {
-        validateFish(fish);
-        return fishRepository.save(fish);
-    }
-
-    public Fish updateFish(Long id, Fish fishDetails) {
-        validateFish(fishDetails);
-        Optional<Fish> fishOptional = fishRepository.findById(id);
-        if (fishOptional.isPresent()) {
-            Fish fish = fishOptional.get();
-            fish.setName(fishDetails.getName());
-            fish.setWeight(fishDetails.getWeight());
-            fish.setLength(fishDetails.getLength());
-            fish.setLocation(fishDetails.getLocation());
-            return fishRepository.save(fish);
-        } else {
-            throw new RuntimeException("Fish not found with id " + id);
-        }
-    }
-
-    public void deleteFish(Long id) {
-        fishRepository.deleteById(id);
-    }
-
-    public Fish likeFish(Long id) {
-        Optional<Fish> fishOptional = fishRepository.findById(id);
-        if (fishOptional.isPresent()) {
-            Fish fish = fishOptional.get();
-            fish.setLikes(fish.getLikes() + 1);
-            Fish updatedFish = fishRepository.save(fish);
-
-            // Send notification
-            emailNotificationService.sendEmail(
-                    "admin@example.com", // Replace with actual recipient logic if needed
-                    "Fish Liked",
-                    "The fish '" + fish.getName() + "' has been liked. It now has " + fish.getLikes() + " likes."
-            );
-
-            return updatedFish;
-        } else {
-            throw new RuntimeException("Fish not found with id " + id);
-        }
-    }
-
-    public Fish unlikeFish(Long id) {
-        Optional<Fish> fishOptional = fishRepository.findById(id);
-        if (fishOptional.isPresent()) {
-            Fish fish = fishOptional.get();
-            fish.setLikes(fish.getLikes() - 1);
-            Fish updatedFish = fishRepository.save(fish);
-
-            // Send notification
-            emailNotificationService.sendEmail(
-                    "admin@example.com", // Replace with actual recipient logic if needed
-                    "Fish Unliked",
-                    "The fish '" + fish.getName() + "' has been unliked. It now has " + fish.getLikes() + " likes."
-            );
-
-            return updatedFish;
-        } else {
-            throw new RuntimeException("Fish not found with id " + id);
     public ResponseEntity<?> createFish(Fish fish) {
         try {
             validateFish(fish);
