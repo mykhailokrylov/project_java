@@ -52,4 +52,9 @@ public class JwtTokenUtil {
             return false;
         }
     }
+
+    public String getRoleFromToken(String token) {
+        Claims claims = getAllClaimsFromToken(token);
+        return claims.get("role", String.class);
+    }
 }
