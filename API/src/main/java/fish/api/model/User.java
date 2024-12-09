@@ -4,6 +4,8 @@ import javax.persistence.*;
 import javax.validation.constraints.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDateTime;
 
 @Entity
@@ -22,6 +24,7 @@ public class User {
 
     @NotBlank(message = "Password is mandatory")
     @Size(min = 8, message = "Password must be at least 8 characters long")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @NotBlank(message = "Email is mandatory")
@@ -29,6 +32,7 @@ public class User {
     @Column(unique = true)
     private String email;
 
+    @JsonIgnore
     private LocalDateTime suspendedUntil;
 
     public boolean isSuspended() {
