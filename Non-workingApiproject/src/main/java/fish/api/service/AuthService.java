@@ -1,7 +1,9 @@
 package fish.api.service;
 
 import fish.api.model.User;
+import fish.api.model.Admin;
 import fish.api.repository.UserRepository;
+import fish.api.repository.AdminRepository;
 import fish.api.util.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,6 +18,9 @@ public class AuthService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private AdminRepository adminRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -49,6 +54,35 @@ public class AuthService {
         }
 
         String token = jwtTokenUtil.generateToken(user.getUsername());
+        return ResponseEntity.ok(token);
+    }
+
+    public ResponseEntity<?> registerAdmin(RegisterRequest request) {
+        if (adminRepository.existsByUsername(request.getUsername())) {
+            return ResponseEntity.badRequest().body("Username is already taken");
+        }
+        if (adminRepository.existsByEmail(request.getEmail())) {
+            return ResponseEntity.badRequest().body("Email is already in use");
+        }
+
+        Admin admin = new Admin();
+        admin.setUsername(request.getUsername());
+        admin.setPassword(passwordEncoder.encode(request.getPassword()));
+        admin.setEmail(request.getEmail());
+        adminRepository.save(admin);
+
+        return ResponseEntity.ok("Admin registered successfully");
+    }
+
+    public ResponseEntity<?> loginAdmin(LoginRequest request) {
+        Admin admin = adminRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new RuntimeException("Invalid username or password"));
+
+        if (!passwordEncoder.matches(request.getPassword(), admin.getPassword())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
+        }
+
+        String token = jwtTokenUtil.generateToken(admin.getUsername());
         return ResponseEntity.ok(token);
     }
 }
