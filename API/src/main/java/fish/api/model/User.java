@@ -24,15 +24,16 @@ public class User {
 
     @NotBlank(message = "Password is mandatory")
     @Size(min = 8, message = "Password must be at least 8 characters long")
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @JsonIgnore  // Changed from @JsonProperty to @JsonIgnore
     private String password;
 
     @NotBlank(message = "Email is mandatory")
     @Email(message = "Email should be valid")
     @Column(unique = true)
+    @JsonIgnore  // Add this to protect email
     private String email;
 
-    @JsonIgnore
+    @JsonIgnore  // Keep this as is
     private LocalDateTime suspendedUntil;
 
     public boolean isSuspended() {
