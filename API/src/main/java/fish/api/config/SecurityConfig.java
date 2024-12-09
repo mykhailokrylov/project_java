@@ -14,17 +14,26 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         return new BCryptPasswordEncoder();
     }
 
+    @Bean
+    public CustomAuthenticationEntryPoint customAuthenticationEntryPoint() {
+        return new CustomAuthenticationEntryPoint();
+    }
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
+            .csrf().disable()
             .authorizeRequests()
-            .antMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/v3/api-docs.yaml").permitAll()
-            .anyRequest().authenticated()
+                .antMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/v3/api-docs.yaml", "/api/auth/**", "/api/admin/create-default-admin").permitAll()
+                .anyRequest().authenticated()
             .and()
-            .formLogin().permitAll()
+            .exceptionHandling()
+                .authenticationEntryPoint(customAuthenticationEntryPoint())
             .and()
-            .logout().permitAll()
-            .and()
-            .csrf().disable();
+            .logout()
+                .logoutSuccessHandler((request, response, authentication) -> {
+                    response.setContentType("application/json");
+                    response.getOutputStream().println("{ \"message\": \"Logout successful\" }");
+                });
     }
 }
