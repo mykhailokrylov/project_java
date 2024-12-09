@@ -42,7 +42,8 @@ public class AuthService {
         user.setEmail(request.getEmail());
         userRepository.save(user);
 
-        return ResponseEntity.ok("User registered successfully");
+        String token = jwtTokenUtil.generateToken(user.getUsername(), "ROLE_USER");
+        return ResponseEntity.ok(token);
     }
 
     public ResponseEntity<?> login(LoginRequest request) {
@@ -53,7 +54,7 @@ public class AuthService {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
         }
 
-        String token = jwtTokenUtil.generateToken(user.getUsername());
+        String token = jwtTokenUtil.generateToken(user.getUsername(), "ROLE_USER");
         return ResponseEntity.ok(token);
     }
 
@@ -71,7 +72,8 @@ public class AuthService {
         admin.setEmail(request.getEmail());
         adminRepository.save(admin);
 
-        return ResponseEntity.ok("Admin registered successfully");
+        String token = jwtTokenUtil.generateToken(admin.getUsername(), "ROLE_ADMIN");
+        return ResponseEntity.ok(token);
     }
 
     public ResponseEntity<?> loginAdmin(LoginRequest request) {
@@ -82,7 +84,7 @@ public class AuthService {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
         }
 
-        String token = jwtTokenUtil.generateToken(admin.getUsername());
+        String token = jwtTokenUtil.generateToken(admin.getUsername(), "ROLE_ADMIN");
         return ResponseEntity.ok(token);
     }
 }
