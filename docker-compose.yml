@@ -7,12 +7,12 @@ services:
     env_file:
       - .env
     volumes:
-      - ./01_init.sql:/docker-entrypoint-initdb.d/01_init.sql
+      - ./Database:/docker-entrypoint-initdb.d
     networks:
       - api_network
 
   server:
-    build: ./Non-workingApiproject/
+    build: ./API/
     container_name: server
     ports:
       - "8080:8080"
