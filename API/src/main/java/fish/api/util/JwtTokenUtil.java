@@ -15,13 +15,14 @@ public class JwtTokenUtil {
         this.expiration = expiration;
     }
 
-    public String generateToken(String username, String role) {
+    public String generateToken(String username, String role, Long userId) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
 
         return Jwts.builder()
                 .setSubject(username)
                 .claim("role", role)
+                .claim("userId", userId)  // Add this line to include userId in token
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(SignatureAlgorithm.HS512, secret)
@@ -56,5 +57,11 @@ public class JwtTokenUtil {
     public String getRoleFromToken(String token) {
         Claims claims = getAllClaimsFromToken(token);
         return claims.get("role", String.class);
+    }
+
+    // Add this new method
+    public Long getUserIdFromToken(String token) {
+        Claims claims = getAllClaimsFromToken(token);
+        return claims.get("userId", Long.class);
     }
 }

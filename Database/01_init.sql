@@ -19,6 +19,14 @@ CREATE TABLE api_schema.fish (
     likes INT DEFAULT 0
 );
 
+CREATE TABLE api_schema.fish_reactions (
+    id SERIAL PRIMARY KEY,
+    fish_id INT REFERENCES api_schema.fish(id) ON DELETE CASCADE,
+    user_id INT REFERENCES api_schema.user(id) ON DELETE CASCADE,
+    reaction_type VARCHAR(10) NOT NULL CHECK (reaction_type IN ('LIKE', 'DISLIKE')),
+    UNIQUE (fish_id, user_id)
+);
+
 CREATE TABLE api_schema.admin (
     id SERIAL PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,

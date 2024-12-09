@@ -2,6 +2,8 @@ package fish.api.service;
 
 import fish.api.model.Fish;
 import fish.api.repository.FishRepository;
+import fish.api.model.FishReaction;
+import fish.api.repository.FishReactionRepository;
 //import fish.api.notifications.NotificationService; // Import your email service
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,9 @@ public class FishService {
 
     @Autowired
     private NotificationService emailNotificationService;
+
+    @Autowired
+    private FishReactionRepository fishReactionRepository;
 
     public ResponseEntity<?> createFish(Fish fish) {
         try {
@@ -71,35 +76,43 @@ public class FishService {
         }
     }
 
-    public ResponseEntity<?> likeFish(Long id) {
+    public ResponseEntity<?> reactToFish(Long fishId, Long userId, String reactionType) {
         try {
-            Optional<Fish> fishOptional = fishRepository.findById(id);
-            if (fishOptional.isPresent()) {
-                Fish fish = fishOptional.get();
-                fish.setLikes(fish.getLikes() + 1);
-                Fish likedFish = fishRepository.save(fish);
-                return ResponseEntity.ok(likedFish);
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Fish not found with id " + id);
+            Optional<Fish> fishOptional = fishRepository.findById(fishId);
+            if (fishOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Fish not found with id " + fishId);
             }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while liking the fish");
-        }
-    }
 
-    public ResponseEntity<?> unlikeFish(Long id) {
-        try {
-            Optional<Fish> fishOptional = fishRepository.findById(id);
-            if (fishOptional.isPresent()) {
-                Fish fish = fishOptional.get();
-                fish.setLikes(fish.getLikes() - 1);
-                Fish unlikedFish = fishRepository.save(fish);
-                return ResponseEntity.ok(unlikedFish);
+            Fish fish = fishOptional.get();
+            Optional<FishReaction> existingReaction = fishReactionRepository
+                    .findByFishIdAndUserId(fishId, userId);
+
+            if (existingReaction.isPresent()) {
+                FishReaction reaction = existingReaction.get();
+                if (reaction.getReactionType().equals(reactionType)) {
+                    // Remove reaction if it's the same type (unlike/undislike)
+                    fishReactionRepository.delete(reaction);
+                    fish.getReactions().remove(reaction);
+                } else {
+                    // Update reaction type if different
+                    reaction.setReactionType(reactionType);
+                    fishReactionRepository.save(reaction);
+                }
             } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Fish not found with id " + id);
+                // Create new reaction
+                FishReaction reaction = new FishReaction();
+                reaction.setFish(fish);
+                reaction.setUserId(userId);
+                reaction.setReactionType(reactionType);
+                FishReaction savedReaction = fishReactionRepository.save(reaction);
+                fish.getReactions().add(savedReaction);
             }
+
+            Fish updatedFish = fishRepository.save(fish);
+            return ResponseEntity.ok(updatedFish);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while unliking the fish");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An error occurred while processing the reaction");
         }
     }
 

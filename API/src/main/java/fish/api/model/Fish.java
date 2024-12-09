@@ -2,6 +2,8 @@ package fish.api.model;
 
 import javax.persistence.*;
 import javax.validation.constraints.*;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "fish", schema = "api_schema")
@@ -33,8 +35,8 @@ public class Fish {
     @Column(nullable = false)
     private String location;
 
-    @Column(nullable = false)
-    private int likes;
+    @OneToMany(mappedBy = "fish", cascade = CascadeType.ALL)
+    private Set<FishReaction> reactions = new HashSet<>();
 
     // Getters and Setters
     public Long getId() {
@@ -77,11 +79,23 @@ public class Fish {
         this.location = location;
     }
 
-    public int getLikes() {
-        return likes;
+    public Set<FishReaction> getReactions() {
+        return reactions;
     }
 
-    public void setLikes(int likes) {
-        this.likes = likes;
+    public void setReactions(Set<FishReaction> reactions) {
+        this.reactions = reactions;
+    }
+
+    public int getLikes() {
+        return (int) reactions.stream()
+                .filter(r -> "LIKE".equals(r.getReactionType()))
+                .count();
+    }
+
+    public int getDislikes() {
+        return (int) reactions.stream()
+                .filter(r -> "DISLIKE".equals(r.getReactionType()))
+                .count();
     }
 }

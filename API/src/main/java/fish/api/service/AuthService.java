@@ -5,7 +5,6 @@ import fish.api.model.Admin;
 import fish.api.repository.UserRepository;
 import fish.api.repository.AdminRepository;
 import fish.api.util.JwtTokenUtil;
-//import fish.api.notifications.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -36,8 +35,6 @@ public class AuthService {
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
 
-    @Autowired
-    private NotificationService NotificationService;
     public ResponseEntity<?> register(RegisterRequest request) {
         try {
             if (userRepository.existsByUsername(request.getUsername())) {
@@ -57,14 +54,7 @@ public class AuthService {
             user.setEmail(request.getEmail());
             userRepository.save(user);
 
-            // Send welcome email
-            NotificationService.sendEmail(
-                    user.getEmail(),
-                    "Welcome to Fish App",
-                    "Dear " + user.getUsername() + ",\n\nThank you for registering at Fish App!"
-            );
-
-            String token = jwtTokenUtil.generateToken(user.getUsername(), "ROLE_USER");
+            String token = jwtTokenUtil.generateToken(user.getUsername(), "ROLE_USER", user.getId());
             Map<String, String> body = new HashMap<>();
             body.put("token", token);
             return ResponseEntity.ok(body);
@@ -87,7 +77,7 @@ public class AuthService {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
             }
 
-            String token = jwtTokenUtil.generateToken(user.getUsername(), "ROLE_USER");
+            String token = jwtTokenUtil.generateToken(user.getUsername(), "ROLE_USER", user.getId());
             Map<String, String> body = new HashMap<>();
             body.put("token", token);
             return ResponseEntity.ok(body);
@@ -123,14 +113,7 @@ public class AuthService {
             admin.setEmail(request.getEmail());
             adminRepository.save(admin);
 
-            // Send welcome email to admin
-            NotificationService.sendEmail(
-                    admin.getEmail(),
-                    "Welcome to Fish App (Admin)",
-                    "Dear " + admin.getUsername() + ",\n\nYou have been registered as an admin at Fish App!"
-            );
-
-            String token = jwtTokenUtil.generateToken(admin.getUsername(), "ROLE_ADMIN");
+            String token = jwtTokenUtil.generateToken(admin.getUsername(), "ROLE_ADMIN", admin.getId());
             Map<String, String> body = new HashMap<>();
             body.put("token", token);
             return ResponseEntity.ok(body);
@@ -153,7 +136,7 @@ public class AuthService {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
             }
 
-            String token = jwtTokenUtil.generateToken(admin.getUsername(), "ROLE_ADMIN");
+            String token = jwtTokenUtil.generateToken(admin.getUsername(), "ROLE_ADMIN", admin.getId());
             Map<String, String> body = new HashMap<>();
             body.put("token", token);
             return ResponseEntity.ok(body);

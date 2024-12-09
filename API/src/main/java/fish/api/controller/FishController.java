@@ -71,20 +71,23 @@ public class FishController {
         return fishService.deleteFish(id);
     }
 
-    @PostMapping(value = "/{id}/like", produces = "application/json")
-    public ResponseEntity<?> likeFish(@PathVariable Long id, HttpServletRequest request) {
-        if (isAdmin(request)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Admins cannot like fish");
+    @PostMapping(value = "/{id}/react", produces = "application/json")
+    public ResponseEntity<?> reactToFish(
+            @PathVariable Long id,
+            @RequestParam String reactionType,
+            HttpServletRequest request) {
+        if (!isValidToken(request)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Valid token required");
         }
-        return fishService.likeFish(id);
-    }
-
-    @PostMapping(value = "/{id}/unlike", produces = "application/json")
-    public ResponseEntity<?> unlikeFish(@PathVariable Long id, HttpServletRequest request) {
         if (isAdmin(request)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Admins cannot unlike fish");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Admins cannot react to fish");
         }
-        return fishService.unlikeFish(id);
+        if (!reactionType.equals("LIKE") && !reactionType.equals("DISLIKE")) {
+            return ResponseEntity.badRequest().body("Invalid reaction type");
+        }
+        
+        Long userId = jwtService.getUserIdFromToken(request.getHeader(HttpHeaders.AUTHORIZATION).substring(7));
+        return fishService.reactToFish(id, userId, reactionType);
     }
 
     @GetMapping(value = "/{id}", produces = "application/json")
