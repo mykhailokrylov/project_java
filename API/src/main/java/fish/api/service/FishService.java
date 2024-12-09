@@ -2,6 +2,7 @@ package fish.api.service;
 
 import fish.api.model.Fish;
 import fish.api.repository.FishRepository;
+//import fish.api.notifications.NotificationService; // Import your email service
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,9 @@ public class FishService {
 
     @Autowired
     private Validator validator;
+
+    @Autowired
+    private NotificationService emailNotificationService;
 
     public Fish createFish(Fish fish) {
         validateFish(fish);
@@ -49,7 +53,16 @@ public class FishService {
         if (fishOptional.isPresent()) {
             Fish fish = fishOptional.get();
             fish.setLikes(fish.getLikes() + 1);
-            return fishRepository.save(fish);
+            Fish updatedFish = fishRepository.save(fish);
+
+            // Send notification
+            emailNotificationService.sendEmail(
+                    "admin@example.com", // Replace with actual recipient logic if needed
+                    "Fish Liked",
+                    "The fish '" + fish.getName() + "' has been liked. It now has " + fish.getLikes() + " likes."
+            );
+
+            return updatedFish;
         } else {
             throw new RuntimeException("Fish not found with id " + id);
         }
@@ -60,7 +73,16 @@ public class FishService {
         if (fishOptional.isPresent()) {
             Fish fish = fishOptional.get();
             fish.setLikes(fish.getLikes() - 1);
-            return fishRepository.save(fish);
+            Fish updatedFish = fishRepository.save(fish);
+
+            // Send notification
+            emailNotificationService.sendEmail(
+                    "admin@example.com", // Replace with actual recipient logic if needed
+                    "Fish Unliked",
+                    "The fish '" + fish.getName() + "' has been unliked. It now has " + fish.getLikes() + " likes."
+            );
+
+            return updatedFish;
         } else {
             throw new RuntimeException("Fish not found with id " + id);
         }

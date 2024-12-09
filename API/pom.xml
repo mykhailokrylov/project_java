@@ -111,6 +111,18 @@
             <artifactId>springdoc-openapi-security</artifactId>
             <version>1.6.14</version>
         </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-beans</artifactId>
+            <version>5.3.23</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context-support</artifactId>
+            <version>5.3.23</version>
+        </dependency>
+
     </dependencies>
 
     <build>
