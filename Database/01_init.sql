@@ -42,13 +42,3 @@ GRANT USAGE ON SCHEMA api_schema TO api_user;
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA api_schema TO api_user;
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA api_schema TO api_user;
 GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA api_schema TO api_user;
-
--- Ensure at least one admin exists
-DO
-$$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM api_schema.admin) THEN
-        INSERT INTO api_schema.admin (username, password, email) VALUES ('admin', 'admin', 's97813@pollub.edu.pl');
-    END IF;
-END
-$$;

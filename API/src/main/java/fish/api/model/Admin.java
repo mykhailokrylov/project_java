@@ -27,4 +27,10 @@ public class Admin {
     @Email(message = "Email should be valid")
     @Column(unique = true)
     private String email;
+
+    public Admin(String username, String password, String email) {
+        this.username = username;
+        this.password = password;
+        this.email = email;
+    }
 }

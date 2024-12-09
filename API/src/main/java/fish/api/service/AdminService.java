@@ -9,6 +9,7 @@ import fish.api.repository.AdminRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.util.Optional;
 import java.time.LocalDateTime;
@@ -28,7 +29,7 @@ public class AdminService {
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
-    public void suspendUser(Long userId, LocalDateTime until) {
+    public void suspendUser(Long userId, @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") LocalDateTime until) {
         Optional<User> user = userRepository.findById(userId);
         if (user.isPresent()) {
             User userToSuspend = user.get();
@@ -63,6 +64,10 @@ public class AdminService {
         validateAdmin(admin);
         admin.setPassword(passwordEncoder.encode(admin.getPassword()));
         return adminRepository.save(admin);
+    }
+
+    public long adminCount() {
+        return adminRepository.count();
     }
 
     private void validateAdmin(Admin admin) {
