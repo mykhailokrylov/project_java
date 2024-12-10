@@ -213,6 +213,33 @@ public class FishController {
         }
     }
 
+    @GetMapping(value = "/user/{userId}", produces = "application/json")
+    public ResponseEntity<?> getUserFishesById(@PathVariable Long userId, HttpServletRequest request) {
+        logger.info("Received request for user's fishes with ID: {}", userId);
+        
+        if (!isValidToken(request)) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Valid token required");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        }
+
+        try {
+            List<Fish> userFishes = fishService.getUserFishes(userId);
+            Map<String, Object> response = new HashMap<>();
+            response.put("fishes", userFishes);
+            response.put("count", userFishes.size());
+            response.put("userId", userId);
+            response.put("status", "success");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Error fetching fishes for user {}: {}", userId, e.getMessage());
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Failed to fetch user fishes");
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+
     @GetMapping(value = "/search", produces = "application/json")
     public ResponseEntity<?> searchFishes(
             @RequestParam(required = false) Double minWeight,
