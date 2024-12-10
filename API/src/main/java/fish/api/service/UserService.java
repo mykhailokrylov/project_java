@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import fish.api.repository.UserRepository;
+import fish.api.dto.UpdateProfileDTO;
 
 import javax.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
@@ -53,6 +54,29 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    public User updateUserProfile(Long id, UpdateProfileDTO updateDTO) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Update only provided fields
+        if (updateDTO.getUsername() != null && !updateDTO.getUsername().isEmpty()) {
+            validateUsername(updateDTO.getUsername());
+            user.setUsername(updateDTO.getUsername());
+        }
+
+        if (updateDTO.getEmail() != null && !updateDTO.getEmail().isEmpty()) {
+            validateEmail(updateDTO.getEmail());
+            user.setEmail(updateDTO.getEmail());
+        }
+
+        if (updateDTO.getPassword() != null && !updateDTO.getPassword().isEmpty()) {
+            validatePassword(updateDTO.getPassword());
+            user.setPassword(passwordEncoder.encode(updateDTO.getPassword()));
+        }
+
+        return userRepository.save(user);
+    }
+
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
     }
@@ -81,6 +105,29 @@ public class UserService {
         }
         if (user.getEmail() == null || user.getEmail().isEmpty()) {
             throw new IllegalArgumentException("Email cannot be null or empty");
+        }
+    }
+
+    private void validateUsername(String username) {
+        if (username == null || username.isEmpty()) {
+            throw new IllegalArgumentException("Username cannot be null or empty");
+        }
+        // Add additional username validation if needed
+    }
+
+    private void validateEmail(String email) {
+        if (email == null || email.isEmpty()) {
+            throw new IllegalArgumentException("Email cannot be null or empty");
+        }
+        // Add email format validation if needed
+    }
+
+    private void validatePassword(String password) {
+        if (password == null || password.isEmpty()) {
+            throw new IllegalArgumentException("Password cannot be null or empty");
+        }
+        if (password.length() < 8) {
+            throw new IllegalArgumentException("Password must be at least 8 characters long");
         }
     }
 

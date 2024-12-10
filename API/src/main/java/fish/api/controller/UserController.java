@@ -12,6 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpHeaders;
+import fish.api.dto.UpdateProfileDTO;
 
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
@@ -35,43 +36,65 @@ public class UserController {
         return false;
     }
 
-    @GetMapping("/me")
-    public ResponseEntity<?> getMyProfile(Authentication authentication, HttpServletRequest request) {
-        if (isAdmin(request)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Admins cannot access user profiles");
+    private String getAuthenticatedUsername(Authentication authentication) {
+        if (authentication == null) {
+            throw new RuntimeException("No authentication found");
         }
-        String username = authentication.getName();
-        Optional<User> user = userService.getUserByUsername(username);
-        return user.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        return authentication.getName();
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getMyProfile(HttpServletRequest request) {
+        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (authHeader == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
+        }
+
+        Optional<User> user = jwtService.getUserFromToken(authHeader);
+        if (user.isPresent()) {
+            if (isAdmin(request)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Admins cannot access user profiles");
+            }
+            return ResponseEntity.ok(user.get());
+        }
+        
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token");
     }
 
     @PutMapping("/me")
-    public ResponseEntity<?> updateMyProfile(Authentication authentication, @RequestBody User userDetails, HttpServletRequest request) {
-        if (isAdmin(request)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Admins cannot access user profiles");
-        }
-        String username = authentication.getName();
-        Optional<User> user = userService.getUserByUsername(username);
-        if (user.isPresent()) {
-            User updatedUser = userService.updateUser(user.get().getId(), userDetails);
-            return ResponseEntity.ok(updatedUser);
-        } else {
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<?> updateMyProfile(Authentication authentication, @RequestBody UpdateProfileDTO updateDTO, HttpServletRequest request) {
+        try {
+            if (isAdmin(request)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Admins cannot access user profiles");
+            }
+            String username = getAuthenticatedUsername(authentication);
+            Optional<User> user = userService.getUserByUsername(username);
+            return user.map(existingUser -> {
+                User updatedUser = userService.updateUserProfile(existingUser.getId(), updateDTO);
+                return ResponseEntity.ok(updatedUser);
+            }).orElseGet(() -> ResponseEntity.notFound().build());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
         }
     }
 
     @DeleteMapping("/me")
     public ResponseEntity<?> deleteMyProfile(Authentication authentication, HttpServletRequest request) {
-        if (isAdmin(request)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Admins cannot access user profiles");
-        }
-        String username = authentication.getName();
-        Optional<User> user = userService.getUserByUsername(username);
-        if (user.isPresent()) {
-            userService.deleteUser(user.get().getId());
-            return ResponseEntity.noContent().build();
-        } else {
+        try {
+            if (isAdmin(request)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Admins cannot access user profiles");
+            }
+            String username = getAuthenticatedUsername(authentication);
+            Optional<User> user = userService.getUserByUsername(username);
+            if (user.isPresent()) {
+                userService.deleteUser(user.get().getId());
+                return ResponseEntity.noContent().build();
+            }
             return ResponseEntity.notFound().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
         }
     }
 
