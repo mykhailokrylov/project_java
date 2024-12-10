@@ -119,7 +119,9 @@ public class UserService {
         if (email == null || email.isEmpty()) {
             throw new IllegalArgumentException("Email cannot be null or empty");
         }
-        // Add email format validation if needed
+        if (!email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+            throw new IllegalArgumentException("Invalid email format");
+        }
     }
 
     private void validatePassword(String password) {

@@ -62,40 +62,49 @@ public class UserController {
     }
 
     @PutMapping("/me")
-    public ResponseEntity<?> updateMyProfile(Authentication authentication, @RequestBody UpdateProfileDTO updateDTO, HttpServletRequest request) {
+    public ResponseEntity<?> updateMyProfile(@RequestBody UpdateProfileDTO updateDTO, HttpServletRequest request) {
+        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (authHeader == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
+        }
+
+        Optional<User> user = jwtService.getUserFromToken(authHeader);
+        if (user.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token");
+        }
+
+        if (isAdmin(request)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Admins cannot access user profiles");
+        }
+
         try {
-            if (isAdmin(request)) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Admins cannot access user profiles");
-            }
-            String username = getAuthenticatedUsername(authentication);
-            Optional<User> user = userService.getUserByUsername(username);
-            return user.map(existingUser -> {
-                User updatedUser = userService.updateUserProfile(existingUser.getId(), updateDTO);
-                return ResponseEntity.ok(updatedUser);
-            }).orElseGet(() -> ResponseEntity.notFound().build());
+            User updatedUser = userService.updateUserProfile(user.get().getId(), updateDTO);
+            return ResponseEntity.ok(updatedUser);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while updating the profile");
         }
     }
 
     @DeleteMapping("/me")
-    public ResponseEntity<?> deleteMyProfile(Authentication authentication, HttpServletRequest request) {
-        try {
-            if (isAdmin(request)) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Admins cannot access user profiles");
-            }
-            String username = getAuthenticatedUsername(authentication);
-            Optional<User> user = userService.getUserByUsername(username);
-            if (user.isPresent()) {
-                userService.deleteUser(user.get().getId());
-                return ResponseEntity.noContent().build();
-            }
-            return ResponseEntity.notFound().build();
-        } catch (RuntimeException e) {
+    public ResponseEntity<?> deleteMyProfile(HttpServletRequest request) {
+        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (authHeader == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
         }
+
+        Optional<User> user = jwtService.getUserFromToken(authHeader);
+        if (user.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token");
+        }
+
+        if (isAdmin(request)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Admins cannot access user profiles");
+        }
+
+        userService.deleteUser(user.get().getId());
+        return ResponseEntity.ok("User profile successfully deleted");
     }
 
     @GetMapping("/{id}")
