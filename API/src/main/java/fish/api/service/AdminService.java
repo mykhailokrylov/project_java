@@ -94,6 +94,14 @@ public class AdminService {
         if (admin.getEmail() == null || admin.getEmail().isEmpty()) {
             throw new IllegalArgumentException("Email cannot be null or empty");
         }
+        validateEmail(admin.getEmail());
+    }
+
+    private void validateEmail(String email) {
+        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
+        if (email != null && !email.matches(emailRegex)) {
+            throw new IllegalArgumentException("Invalid email format");
+        }
     }
 
     public Optional<Admin> getAdminByUsername(String username) {
@@ -111,6 +119,7 @@ public class AdminService {
     public Optional<Admin> updateAdmin(String username, Admin adminDetails) {
         return adminRepository.findByUsername(username).map(admin -> {
             if (adminDetails.getEmail() != null) {
+                validateEmail(adminDetails.getEmail());
                 admin.setEmail(adminDetails.getEmail());
             }
             if (adminDetails.getPassword() != null) {

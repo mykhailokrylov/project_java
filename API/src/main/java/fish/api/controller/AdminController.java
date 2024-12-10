@@ -134,10 +134,16 @@ public class AdminController {
         if (!isAdmin(request)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Only admins can access this endpoint");
         }
-        String username = jwtService.getUsernameFromToken(request.getHeader(HttpHeaders.AUTHORIZATION).substring(7));
-        return adminService.updateAdmin(username, adminDetails)
-            .map(ResponseEntity::ok)
-            .orElseGet(() -> ResponseEntity.notFound().build());
+        try {
+            String username = jwtService.getUsernameFromToken(request.getHeader(HttpHeaders.AUTHORIZATION).substring(7));
+            return adminService.updateAdmin(username, adminDetails)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+        } catch (IllegalArgumentException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
     }
 
     @GetMapping("/list")
