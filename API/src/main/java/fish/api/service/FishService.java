@@ -48,6 +48,24 @@ public class FishService {
         logger.info("Attempting to create fish for user ID: {}", userId);
 
         try {
+            // Get user and check suspension
+            Optional<User> userOptional = userService.getUserById(userId);
+            if (userOptional.isEmpty()) {
+                logger.error("User not found with ID: {}", userId);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "User not found with id " + userId));
+            }
+
+            User user = userOptional.get();
+            if (user.isSuspended()) {
+                logger.warn("Suspended user {} attempted to create fish", userId);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of(
+                        "error", "User is suspended",
+                        "until", user.getSuspendedUntil().toString()
+                    ));
+            }
+
             if (fish == null) {
                 logger.error("Fish data is null");
                 return ResponseEntity.badRequest()
@@ -74,15 +92,6 @@ public class FishService {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // Get user
-            Optional<User> userOptional = userService.getUserById(userId);
-            if (userOptional.isEmpty()) {
-                logger.error("User not found with ID: {}", userId);
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "User not found with id " + userId));
-            }
-
-            User user = userOptional.get();
             fish.setUser(user);
 
             logger.debug("Saving fish: {}", fish);
@@ -113,10 +122,21 @@ public class FishService {
 
     public ResponseEntity<?> updateFish(Long id, Fish fishDetails) {
         try {
-            validateFish(fishDetails);
             Optional<Fish> fishOptional = fishRepository.findById(id);
             if (fishOptional.isPresent()) {
                 Fish fish = fishOptional.get();
+                
+                // Check if fish owner is suspended
+                User owner = fish.getUser();
+                if (owner != null && owner.isSuspended()) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of(
+                            "error", "User is suspended",
+                            "until", owner.getSuspendedUntil().toString()
+                        ));
+                }
+
+                validateFish(fishDetails);
                 fish.setName(fishDetails.getName());
                 fish.setWeight(fishDetails.getWeight());
                 fish.setLength(fishDetails.getLength());

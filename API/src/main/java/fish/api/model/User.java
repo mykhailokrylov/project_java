@@ -40,6 +40,10 @@ public class User {
         return suspendedUntil != null && suspendedUntil.isAfter(LocalDateTime.now());
     }
 
+    public LocalDateTime getSuspendedUntil() {
+        return suspendedUntil;
+    }
+
     public void setSuspendedUntil(LocalDateTime suspendedUntil) {
         this.suspendedUntil = suspendedUntil;
     }

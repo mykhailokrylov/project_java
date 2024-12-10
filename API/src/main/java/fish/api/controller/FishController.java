@@ -3,6 +3,8 @@ package fish.api.controller;
 import fish.api.model.Fish;
 import fish.api.service.FishService;
 import fish.api.service.JwtService;
+import fish.api.service.UserService;
+import fish.api.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,6 +38,9 @@ public class FishController {
     @Autowired
     private JwtService jwtService;
 
+    @Autowired
+    private UserService userService;
+
     private boolean isValidToken(HttpServletRequest request) {
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
@@ -52,6 +57,22 @@ public class FishController {
             return "ROLE_ADMIN".equals(jwtService.getRoleFromToken(token));
         }
         return false;
+    }
+
+    private ResponseEntity<?> checkUserSuspension(Long userId) {
+        try {
+            Optional<User> user = userService.getUserById(userId);
+            if (user.isPresent() && user.get().isSuspended()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "User is suspended");
+                error.put("until", user.get().getSuspendedUntil().toString());
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+            }
+            return null;
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Error checking user suspension status"));
+        }
     }
 
     @PostMapping(produces = "application/json")
@@ -81,6 +102,12 @@ public class FishController {
             String token = authHeader.substring(7);
             Long userId = jwtService.getUserIdFromToken(token);
             
+            // Check if user is suspended
+            ResponseEntity<?> suspensionCheck = checkUserSuspension(userId);
+            if (suspensionCheck != null) {
+                return suspensionCheck;
+            }
+
             // Set minimum required fields if not provided
             if (fish.getName() == null) fish.setName("Unnamed Fish");
             if (fish.getWeight() <= 0) fish.setWeight(0.1);
@@ -101,7 +128,22 @@ public class FishController {
         if (isAdmin(request)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Admins cannot update fish");
         }
-        return fishService.updateFish(id, fishDetails);
+
+        try {
+            String token = request.getHeader(HttpHeaders.AUTHORIZATION).substring(7);
+            Long userId = jwtService.getUserIdFromToken(token);
+
+            // Check if user is suspended
+            ResponseEntity<?> suspensionCheck = checkUserSuspension(userId);
+            if (suspensionCheck != null) {
+                return suspensionCheck;
+            }
+
+            return fishService.updateFish(id, fishDetails);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Error processing request"));
+        }
     }
 
     @DeleteMapping(value = "/{id}", produces = "application/json")
