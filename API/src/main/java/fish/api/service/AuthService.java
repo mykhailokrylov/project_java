@@ -5,6 +5,7 @@ import fish.api.model.Admin;
 import fish.api.repository.UserRepository;
 import fish.api.repository.AdminRepository;
 import fish.api.util.JwtTokenUtil;
+import fish.api.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,9 @@ public class AuthService {
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
 
+    @Autowired
+    private NotificationService notificationService;
+
     public ResponseEntity<?> register(RegisterRequest request) {
         try {
             if (userRepository.existsByUsername(request.getUsername())) {
@@ -53,6 +57,8 @@ public class AuthService {
             user.setPassword(passwordEncoder.encode(request.getPassword()));
             user.setEmail(request.getEmail());
             userRepository.save(user);
+
+            notificationService.sendEmail(user.getEmail(), "Welcome to Fish API", "Thank you for registering!");
 
             String token = jwtTokenUtil.generateToken(user.getUsername(), "ROLE_USER", user.getId());
             Map<String, String> body = new HashMap<>();
