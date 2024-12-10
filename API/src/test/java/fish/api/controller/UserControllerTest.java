@@ -24,13 +24,10 @@ public class UserControllerTest {
 
     @Mock
     private UserService userService;
-
     @Mock
     private JwtService jwtService;
-
     @Mock
     private HttpServletRequest httpRequest;
-
     @InjectMocks
     private UserController userController;
 
@@ -40,12 +37,8 @@ public class UserControllerTest {
     }
 
     @Test
-    public void testGetMyProfile() {
-        String token = "Bearer validToken";
-        User user = new User();
-        when(httpRequest.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn(token);
-        when(jwtService.getUserFromToken(token)).thenReturn(Optional.of(user));
-        when(jwtService.getRoleFromToken("validToken")).thenReturn("ROLE_USER");
+    public void shouldReturnProfileWhenCalledGetMyProfile() {
+        User user = mockUserRetrievalWithRole("ROLE_USER");
 
         ResponseEntity<?> response = userController.getMyProfile(httpRequest);
 
@@ -54,12 +47,8 @@ public class UserControllerTest {
     }
 
     @Test
-    public void testDeleteMyProfile() {
-        String token = "Bearer validToken";
-        User user = new User();
-        when(httpRequest.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn(token);
-        when(jwtService.getUserFromToken(token)).thenReturn(Optional.of(user));
-        when(jwtService.getRoleFromToken("validToken")).thenReturn("ROLE_USER");
+    public void shouldDeleteProfileWhenCalledDeleteMyProfile() {
+        mockUserRetrievalWithRole("ROLE_USER");
 
         ResponseEntity<?> response = userController.deleteMyProfile(httpRequest);
 
@@ -68,16 +57,23 @@ public class UserControllerTest {
     }
 
     @Test
-    public void testGetUserProfile() {
+    public void shouldReturnUserProfileWhenCalledGetUserProfile() {
         Long userId = 1L;
         User user = new User();
-        when(httpRequest.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer validToken");
-        when(jwtService.getRoleFromToken("validToken")).thenReturn("ROLE_USER");
         when(userService.getUserById(userId)).thenReturn(Optional.of(user));
 
         ResponseEntity<?> response = userController.getUserProfile(userId, httpRequest);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(user, response.getBody());
+    }
+
+    private User mockUserRetrievalWithRole(String role) {
+        String token = "Bearer validToken";
+        User user = new User();
+        when(httpRequest.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn(token);
+        when(jwtService.getUserFromToken(token)).thenReturn(Optional.of(user));
+        when(jwtService.getRoleFromToken("validToken")).thenReturn(role);
+        return user;
     }
 }

@@ -19,6 +19,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 public class AuthControllerTest {
+
+    private static final String BEARER_TOKEN = "Bearer token";
+
     @Mock
     private AuthService authService;
 
@@ -32,49 +35,53 @@ public class AuthControllerTest {
     private AuthController authController;
 
     @BeforeEach
-    public void setUp() {
+    public void setUpMocks() {
         MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    public void testRegister() {
+    public void shouldRegisterUserSuccessfully() {
         RegisterRequest request = new RegisterRequest();
         when(authService.register(any(RegisterRequest.class))).thenReturn(new ResponseEntity<>(HttpStatus.OK));
 
         ResponseEntity<?> response = authController.register(request);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertResponseStatus(response, HttpStatus.OK);
     }
 
     @Test
-    public void testLogin() {
+    public void shouldLoginUserSuccessfully() {
         LoginRequest request = new LoginRequest();
         when(authService.login(any(LoginRequest.class))).thenReturn(new ResponseEntity<>(HttpStatus.OK));
 
         ResponseEntity<?> response = authController.login(request);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertResponseStatus(response, HttpStatus.OK);
     }
 
     @Test
-    public void testRegisterAdmin() {
+    public void shouldRegisterAdminSuccessfully() {
         RegisterRequest request = new RegisterRequest();
         when(jwtService.getRoleFromToken(any(String.class))).thenReturn("ROLE_ADMIN");
-        when(httpRequest.getHeader(any(String.class))).thenReturn("Bearer token");
+        when(httpRequest.getHeader(any(String.class))).thenReturn(BEARER_TOKEN);
         when(authService.registerAdmin(any(RegisterRequest.class))).thenReturn(new ResponseEntity<>(HttpStatus.OK));
 
         ResponseEntity<?> response = authController.registerAdmin(request, httpRequest);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertResponseStatus(response, HttpStatus.OK);
     }
 
     @Test
-    public void testLoginAdmin() {
+    public void shouldLoginAdminSuccessfully() {
         LoginRequest request = new LoginRequest();
         when(authService.loginAdmin(any(LoginRequest.class))).thenReturn(new ResponseEntity<>(HttpStatus.OK));
 
         ResponseEntity<?> response = authController.loginAdmin(request);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertResponseStatus(response, HttpStatus.OK);
+    }
+
+    private void assertResponseStatus(ResponseEntity<?> response, HttpStatus expectedStatus) {
+        assertEquals(expectedStatus, response.getStatusCode());
     }
 }
