@@ -18,6 +18,9 @@ import org.springframework.http.HttpStatus;
 import javax.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpHeaders;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/admin")
 public class AdminController {
@@ -38,44 +41,81 @@ public class AdminController {
     }
 
     @PostMapping("/create-default-admin")
-    public ResponseEntity<?> createDefaultAdmin(HttpServletRequest request) {
-        if (!isAdmin(request)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Only admins can access this endpoint");
-        }
-        if (adminService.adminCount() == 0) {
-            Admin admin = new Admin("admin", "12345678", "s97813@pollub.edu.pl");
-            adminService.createAdmin(admin);
-            return ResponseEntity.ok("Default admin created");
-        } else {
-            return ResponseEntity.ok("Admin already exists");
+    public ResponseEntity<?> createDefaultAdmin() {
+        try {
+            if (adminService.adminCount() == 0) {
+                Admin admin = new Admin("admin", "12345678", "s97813@pollub.edu.pl");
+                adminService.createAdmin(admin);
+                Map<String, String> response = new HashMap<>();
+                response.put("message", "Default admin created");
+                return ResponseEntity.ok(response);
+            } else {
+                Map<String, String> response = new HashMap<>();
+                response.put("message", "Admin already exists");
+                return ResponseEntity.ok(response);
+            }
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "An error occurred while creating default admin");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
 
     @PostMapping("/suspend-user/{userId}")
-    public ResponseEntity<String> suspendUser(@PathVariable Long userId, @RequestBody @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") LocalDateTime until, HttpServletRequest request) {
+    public ResponseEntity<?> suspendUser(@PathVariable Long userId, @RequestBody @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") LocalDateTime until, HttpServletRequest request) {
         if (!isAdmin(request)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Only admins can access this endpoint");
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Only admins can access this endpoint");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
         }
-        adminService.suspendUser(userId, until);
-        return ResponseEntity.ok("User suspended until " + until);
+        try {
+            adminService.suspendUser(userId, until);
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "User suspended until " + until);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
     }
 
     @PostMapping("/unsuspend-user/{userId}")
-    public ResponseEntity<String> unsuspendUser(@PathVariable Long userId, HttpServletRequest request) {
+    public ResponseEntity<?> unsuspendUser(@PathVariable Long userId, HttpServletRequest request) {
         if (!isAdmin(request)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Only admins can access this endpoint");
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Only admins can access this endpoint");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
         }
-        adminService.unsuspendUser(userId);
-        return ResponseEntity.ok("User unsuspended");
+        try {
+            adminService.unsuspendUser(userId);
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "User unsuspended");
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
     }
 
     @DeleteMapping("/remove-fish/{fishId}")
-    public ResponseEntity<String> removeFish(@PathVariable Long fishId, HttpServletRequest request) {
+    public ResponseEntity<?> removeFish(@PathVariable Long fishId, HttpServletRequest request) {
         if (!isAdmin(request)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Only admins can access this endpoint");
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Only admins can access this endpoint");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
         }
-        adminService.removeFish(fishId);
-        return ResponseEntity.ok("Fish removed");
+        try {
+            adminService.removeFish(fishId);
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Fish removed");
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
     }
 
     @GetMapping("/me")

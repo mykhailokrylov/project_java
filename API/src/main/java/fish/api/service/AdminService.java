@@ -6,6 +6,7 @@ import fish.api.model.Admin;
 import fish.api.repository.UserRepository;
 import fish.api.repository.FishRepository;
 import fish.api.repository.AdminRepository;
+import fish.api.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -30,12 +31,18 @@ public class AdminService {
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
+    @Autowired
+    private NotificationService notificationService;
+
     public void suspendUser(Long userId, @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") LocalDateTime until) {
         Optional<User> user = userRepository.findById(userId);
         if (user.isPresent()) {
             User userToSuspend = user.get();
             userToSuspend.setSuspendedUntil(until);
             userRepository.save(userToSuspend);
+
+            // Send email to user
+            notificationService.sendEmail(userToSuspend.getEmail(), "Account suspended", "Your account has been suspended until " + until);
         } else {
             throw new RuntimeException("User not found");
         }
@@ -47,6 +54,9 @@ public class AdminService {
             User userToUnsuspend = user.get();
             userToUnsuspend.setSuspendedUntil(null);
             userRepository.save(userToUnsuspend);
+
+            // Send email to user
+            notificationService.sendEmail(userToUnsuspend.getEmail(), "Account unsuspended!", "Your account has been unsuspended!");
         } else {
             throw new RuntimeException("User not found");
         }
