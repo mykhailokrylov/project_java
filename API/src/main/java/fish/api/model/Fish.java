@@ -1,12 +1,13 @@
 package fish.api.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import javax.persistence.*;
 import javax.validation.constraints.*;
 import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "fish", schema = "api_schema")
+@Table(name = "fish")
 public class Fish {
 
     @Id
@@ -35,6 +36,7 @@ public class Fish {
     @Column(nullable = false)
     private String location;
 
+    @JsonManagedReference
     @OneToMany(mappedBy = "fish", cascade = CascadeType.ALL)
     private Set<FishReaction> reactions = new HashSet<>();
 

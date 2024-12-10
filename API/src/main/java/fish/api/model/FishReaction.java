@@ -1,14 +1,16 @@
 package fish.api.model;
 
 import javax.persistence.*;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Entity
-@Table(name = "fish_reactions", schema = "api_schema")
+@Table(name = "fish_reactions")
 public class FishReaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "fish_id", nullable = false)
     private Fish fish;

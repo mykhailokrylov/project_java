@@ -18,10 +18,17 @@ import org.springframework.http.HttpHeaders;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/fish")
 public class FishController {
+
+    private static final Logger logger = LoggerFactory.getLogger(FishController.class);
 
     @Autowired
     private FishService fishService;
@@ -49,15 +56,44 @@ public class FishController {
 
     @PostMapping(produces = "application/json")
     public ResponseEntity<?> createFish(@Valid @RequestBody Fish fish, HttpServletRequest request) {
+        logger.info("Received fish creation request");
+
         if (!isValidToken(request)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Valid token required");
+            logger.warn("Invalid token in fish creation request");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", "Valid token required"));
         }
+
         if (isAdmin(request)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Admins cannot create fish");
+            logger.warn("Admin attempted to create fish");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("error", "Admins cannot create fish"));
         }
-        String token = request.getHeader(HttpHeaders.AUTHORIZATION).substring(7);
-        Long userId = jwtService.getUserIdFromToken(token);
-        return fishService.createFish(fish, userId);
+
+        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            logger.warn("Missing or invalid Authorization header");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", "Valid authorization header required"));
+        }
+
+        try {
+            String token = authHeader.substring(7);
+            Long userId = jwtService.getUserIdFromToken(token);
+            
+            // Set minimum required fields if not provided
+            if (fish.getName() == null) fish.setName("Unnamed Fish");
+            if (fish.getWeight() <= 0) fish.setWeight(0.1);
+            if (fish.getLength() <= 0) fish.setLength(0.1);
+            if (fish.getLocation() == null) fish.setLocation("Unknown Location");
+
+            logger.info("Processing fish creation for user ID: {}", userId);
+            return fishService.createFish(fish, userId);
+        } catch (Exception e) {
+            logger.error("Error processing fish creation request:", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Error processing request: " + e.getMessage()));
+        }
     }
 
     @PutMapping(value = "/{id}", produces = "application/json")
@@ -79,13 +115,16 @@ public class FishController {
             @RequestParam String reactionType,
             HttpServletRequest request) {
         if (!isValidToken(request)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Valid token required");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", "Valid token required"));
         }
         if (isAdmin(request)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Admins cannot react to fish");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("error", "Admins cannot react to fish"));
         }
         if (!reactionType.equals("LIKE") && !reactionType.equals("DISLIKE")) {
-            return ResponseEntity.badRequest().body("Invalid reaction type");
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", "Invalid reaction type"));
         }
         
         Long userId = jwtService.getUserIdFromToken(request.getHeader(HttpHeaders.AUTHORIZATION).substring(7));
@@ -95,17 +134,83 @@ public class FishController {
     @GetMapping(value = "/{id}", produces = "application/json")
     public ResponseEntity<?> getFishById(@PathVariable Long id, HttpServletRequest request) {
         if (!isValidToken(request)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Valid token required");
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Valid token required");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
         }
-        return fishService.getFishById(id);
+
+        try {
+            Optional<Fish> fish = fishService.getFishById(id);
+            if (fish.isPresent()) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("fish", fish.get());
+                response.put("status", "success");
+                return ResponseEntity.ok(response);
+            } else {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Fish not found");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+            }
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Failed to fetch fish");
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
     }
 
     @GetMapping(produces = "application/json")
     public ResponseEntity<?> getAllFishes(HttpServletRequest request) {
+        logger.info("Received request for all fishes");
+        
         if (!isValidToken(request)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Valid token required");
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Valid token required");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
         }
-        return fishService.getAllFishes();
+
+        try {
+            List<Fish> fishes = fishService.getAllFishes();
+            Map<String, Object> response = new HashMap<>();
+            response.put("fishes", fishes);
+            response.put("count", fishes.size());
+            response.put("status", "success");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Failed to fetch fishes");
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+
+    @GetMapping(value = "/user", produces = "application/json")
+    public ResponseEntity<?> getUserFishes(HttpServletRequest request) {
+        logger.info("Received request for user's fishes");
+        
+        if (!isValidToken(request)) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Valid token required");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        }
+
+        try {
+            String token = request.getHeader(HttpHeaders.AUTHORIZATION).substring(7);
+            Long userId = jwtService.getUserIdFromToken(token);
+            List<Fish> userFishes = fishService.getUserFishes(userId);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("fishes", userFishes);
+            response.put("count", userFishes.size());
+            response.put("userId", userId);
+            response.put("status", "success");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Failed to fetch user fishes");
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
     }
 
     @GetMapping(value = "/search", produces = "application/json")
@@ -122,13 +227,17 @@ public class FishController {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
-        });
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+    public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("error", "Validation failed");
+        response.put("violations", ex.getBindingResult().getAllErrors().stream()
+            .map(error -> {
+                Map<String, String> violation = new HashMap<>();
+                violation.put("field", ((FieldError) error).getField());
+                violation.put("message", error.getDefaultMessage());
+                return violation;
+            })
+            .collect(Collectors.toList()));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 }
