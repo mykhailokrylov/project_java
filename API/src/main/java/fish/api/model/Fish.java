@@ -38,6 +38,10 @@ public class Fish {
     @OneToMany(mappedBy = "fish", cascade = CascadeType.ALL)
     private Set<FishReaction> reactions = new HashSet<>();
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "user_id")
+    private User user;
+
     // Getters and Setters
     public Long getId() {
         return id;
@@ -85,6 +89,14 @@ public class Fish {
 
     public void setReactions(Set<FishReaction> reactions) {
         this.reactions = reactions;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public int getLikes() {

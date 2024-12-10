@@ -30,12 +30,12 @@ public class JwtTokenUtil {
     }
 
     public String getUsernameFromToken(String token) {
-        Claims claims = Jwts.parser()
-                .setSigningKey(secret)
-                .parseClaimsJws(token)
-                .getBody();
-
-        return claims.getSubject();
+        try {
+            Claims claims = getAllClaimsFromToken(token);
+            return claims.getSubject();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public Claims getAllClaimsFromToken(String token) {
@@ -47,8 +47,8 @@ public class JwtTokenUtil {
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parser().setSigningKey(secret).parseClaimsJws(token);
-            return true;
+            Claims claims = getAllClaimsFromToken(token);
+            return !claims.getExpiration().before(new Date());
         } catch (Exception e) {
             return false;
         }

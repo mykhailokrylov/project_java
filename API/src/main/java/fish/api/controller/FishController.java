@@ -55,7 +55,9 @@ public class FishController {
         if (isAdmin(request)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Admins cannot create fish");
         }
-        return fishService.createFish(fish);
+        String token = request.getHeader(HttpHeaders.AUTHORIZATION).substring(7);
+        Long userId = jwtService.getUserIdFromToken(token);
+        return fishService.createFish(fish, userId);
     }
 
     @PutMapping(value = "/{id}", produces = "application/json")

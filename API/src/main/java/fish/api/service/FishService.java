@@ -4,6 +4,8 @@ import fish.api.model.Fish;
 import fish.api.repository.FishRepository;
 import fish.api.model.FishReaction;
 import fish.api.repository.FishReactionRepository;
+import fish.api.model.User;
+import fish.api.service.UserService;
 //import fish.api.notifications.NotificationService; // Import your email service
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,9 +35,15 @@ public class FishService {
     @Autowired
     private FishReactionRepository fishReactionRepository;
 
-    public ResponseEntity<?> createFish(Fish fish) {
+    @Autowired
+    private UserService userService;
+
+    public ResponseEntity<?> createFish(Fish fish, Long userId) {
         try {
             validateFish(fish);
+            User user = userService.getUserById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+            fish.setUser(user);
             Fish createdFish = fishRepository.save(fish);
             return ResponseEntity.ok(createdFish);
         } catch (ConstraintViolationException e) {
@@ -135,50 +143,6 @@ public class FishService {
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while fetching the fish");
-        }
-    }
-
-    public ResponseEntity<?> getFishesByWeightGreaterThan(double weight) {
-        try {
-            List<Fish> fishes = fishRepository.findAll().stream()
-                    .filter(fish -> fish.getWeight() > weight)
-                    .collect(Collectors.toList());
-            return ResponseEntity.ok(fishes);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while fetching the fishes");
-        }
-    }
-
-    public ResponseEntity<?> getFishesByWeightLessThan(double weight) {
-        try {
-            List<Fish> fishes = fishRepository.findAll().stream()
-                    .filter(fish -> fish.getWeight() < weight)
-                    .collect(Collectors.toList());
-            return ResponseEntity.ok(fishes);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while fetching the fishes");
-        }
-    }
-
-    public ResponseEntity<?> getFishesByLengthGreaterThan(double length) {
-        try {
-            List<Fish> fishes = fishRepository.findAll().stream()
-                    .filter(fish -> fish.getLength() > length)
-                    .collect(Collectors.toList());
-            return ResponseEntity.ok(fishes);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while fetching the fishes");
-        }
-    }
-
-    public ResponseEntity<?> getFishesByLengthLessThan(double length) {
-        try {
-            List<Fish> fishes = fishRepository.findAll().stream()
-                    .filter(fish -> fish.getLength() < length)
-                    .collect(Collectors.toList());
-            return ResponseEntity.ok(fishes);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while fetching the fishes");
         }
     }
 
